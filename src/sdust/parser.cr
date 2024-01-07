@@ -1,0 +1,54 @@
+require "./version"
+require "./options"
+require "./utils"
+
+require "option_parser"
+
+module Sdust
+  class Parser < OptionParser
+    getter options : Options
+
+    def initialize
+      super
+      @options = Options.new
+      @banner = <<-BANNER
+        Usage: sdust [options] <in.fa>
+      BANNER
+      setup_options
+    end
+
+    def setup_options
+      on("-w", "--window SIZE", "Window size") { |v| options.win_size = v.to_i }
+      on("-t", "--threshold SIZE", "Threshold size") { |v| options.threshold = v.to_i }
+      on("-h", "--help", "Show this message") { show_help }
+      on("-v", "--version", "Show version") { show_version }
+      invalid_option { |flag| Utils.print_error!("Invalid option: #{flag}") }
+    end
+
+    def show_version
+      puts Sdust::VERSION
+      exit
+    end
+
+    def show_help
+      puts self
+      exit
+    end
+
+    def parse(argv = ARGV) : Options
+      super
+      validate_arguments(argv)
+      options.in_file = Path.new(argv.first)
+      validate_file_exists(options.in_file)
+      options
+    end
+
+    def validate_arguments(argv)
+      Utils.print_error!("Invalid arguments") if argv.size != 1
+    end
+
+    def validate_file_exists(file)
+      Utils.print_error!("File not found: #{file}") unless File.exists?(file.not_nil!)
+    end
+  end
+end
