@@ -49,11 +49,11 @@ MIT License
 
 ## FAQ
 
-Q: Is this implementation faster than the original Sdust?
-A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled. 
+- Q: Is this implementation faster than the original Sdust?
+- A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled. 
 
-Q: Does this implementation consume more memory than the original Sdust?
-A: No, it seems to consume about 5 times more memory. Memory consumption increases further when multi-threading is enabled.
+- Q: Does this implementation consume less memory than the original Sdust?
+- A: No, it appears to consume about 5 times more memory. Enabling multi-threading further increases the consumption.
 
-Q: Why was it created?
-A: It was created to explore how much performance could be improved using Crystal, a language similar to Ruby.
+- Q: Why was it created?
+- A: It was created to explore how much performance could be improved using Crystal, a language similar to Ruby.
