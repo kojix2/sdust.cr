@@ -44,7 +44,16 @@ module Sdust
     end
 
     def validate_arguments(argv)
-      Utils.print_error!("Invalid arguments") if argv.size != 1
+      case argv.size
+      when 3
+        # OK
+      when 0
+        STDERR.puts self
+        exit 1
+      else
+        Utils.print_error!("Invalid arguments") if argv.size != 1
+        exit 1
+      end
     end
 
     def validate_file_exists(file)
