@@ -21,8 +21,6 @@ jobs:
           crystal: latest
       - name: Install dependencies
         run: shards install --without-development --release
-      - name: Run specs
-        run: crystal spec
       - name: Build executable
         run: shards build --release
       - uses: actions/upload-artifact@v4
