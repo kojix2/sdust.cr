@@ -1,0 +1,60 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build_release:
+    name: Build Release ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu, macos, windows]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Run Linux Build
+        if: matrix.os == 'ubuntu'
+        run: |
+          mkdir -p bin
+          chmod 755 bin
+          docker run -d --name alpine -v $(pwd):/workspace -w /workspace crystallang/crystal:latest-alpine tail -f /dev/null
+          docker exec alpine shards install --without-development --release --static
+          docker exec alpine shards build --release --static
+          docker exec alpine chmod +x bin/sdust
+          zip -j bin/sdust-linux.zip bin/sdust
+
+      - name: Run Mac Build x64
+        if: matrix.os == 'macos'
+        run: |
+          shards install --without-development --release
+          shards build --release
+          chmod +x bin/sdust
+          zip -j bin/sdust-macos.zip bin/sdust
+
+      - name: Run Windows Build x64
+        if: matrix.os == 'windows'
+        run: |
+          shards install --without-development --release
+          shards build --release
+          Set-ExecutionPolicy RemoteSigned -Scope Process
+          Compress-Archive -Path bin/sdust.exe -DestinationPath bin/sdust-windows.zip
+          
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            bin/sdust-linux.zip
+            bin/sdust-macos.zip
+            bin/sdust-windows.zip
+            LICENSE.txt
