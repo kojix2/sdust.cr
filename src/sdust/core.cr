@@ -16,13 +16,13 @@ module Sdust
 
     def initialize
       @curr_value = StaticArray(Int32, WordTotal).new(0)
+      @curr_window = StaticArray(Int32, WordTotal).new(0)
     end
 
     def sdust(sequence : String | IO::Memory, win_size : Int32, threshold : Int32)
       repeat_value = 0
       repeat_window = 0
       win_len = 0
-      curr_window = Array(Int32).new(WordTotal, 0)
       start = 0    # start of the current window
       cont_len = 0 # length of a contiguous A/C/G/T (sub)sequence
       curr_word = 0
@@ -42,7 +42,7 @@ module Sdust
             # save intervals falling out of the current window?
             save_masked_regions(result, perfect_intervals, start)
             win_len, repeat_window, repeat_value = \
-               shift_window(curr_word, window, threshold, win_size, win_len, repeat_window, repeat_value, curr_window)
+               shift_window(curr_word, window, threshold, win_size, win_len, repeat_window, repeat_value)
             if (repeat_window * 10 > win_len * threshold)
               find_perfect(perfect_intervals, window, threshold, start, win_len, repeat_value)
             end
@@ -70,26 +70,26 @@ module Sdust
 
     def shift_window(
       curr_word : Int32, window : Array(Int32), threshold : Int32, win_size : Int32,
-      win_len : Int32, repeat_window : Int32, repeat_value : Int32,
-      curr_window : Array(Int32)
+      win_len : Int32, repeat_window : Int32, repeat_value : Int32
     )
       if window.size >= win_size - WordLength + 1
         s = window.shift
-        curr_window[s] -= 1; repeat_window -= curr_window[s]
+        repeat_window -= (@curr_window[s] -= 1)
         if win_len > window.size
-          win_len -= 1; @curr_value[s] -= 1; repeat_value -= @curr_value[s]
+          win_len -= 1
+          repeat_value -= (@curr_value[s] -= 1)
         end
       end
 
       window.push(curr_word)
       win_len += 1
-      repeat_window += curr_window[curr_word]; curr_window[curr_word] += 1
-      repeat_value += @curr_value[curr_word]; @curr_value[curr_word] += 1
+      repeat_window += (@curr_window[curr_word] += 1) - 1
+      repeat_value += (@curr_value[curr_word] += 1) - 1
 
       if @curr_value[curr_word] * 10 > (threshold << 1)
         loop do
           s = window[window.size - win_len]
-          @curr_value[s] -= 1; repeat_value -= @curr_value[s]
+          repeat_value -= (@curr_value[s] -= 1)
           win_len -= 1
           break if s == curr_word
         end
@@ -134,7 +134,7 @@ module Sdust
       c = @curr_value.clone
       (window.size - win_len - 1).downto(0) do |i|
         t = window[i]
-        repeat_value += c[t]; c[t] += 1
+        repeat_value += (c[t] += 1) - 1
         new_repeat = repeat_value
         new_length = window.size - i - 1
 
