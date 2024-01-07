@@ -12,14 +12,19 @@ module Sdust
       super
       @options = Options.new
       @banner = <<-BANNER
-        Usage: sdust [options] <in.fa>
+
+      Program: sdust.cr (Crystal implementation of sdust)
+      Version: #{Sdust::VERSION}
+      Source:  https://github.com/kojix2/sdust.cr
+
+      Usage: sdust [options] <in.fa>
       BANNER
       setup_options
     end
 
     def setup_options
-      on("-w", "--window SIZE", "Window size") { |v| options.win_size = v.to_i }
-      on("-t", "--threshold SIZE", "Threshold size") { |v| options.threshold = v.to_i }
+      on("-w", "--window SIZE", "Window size [#{options.win_size}]") { |v| options.win_size = v.to_i }
+      on("-t", "--threshold SIZE", "Threshold size [#{options.threshold}]") { |v| options.threshold = v.to_i }
       on("-h", "--help", "Show this message") { show_help }
       on("-v", "--version", "Show version") { show_version }
       invalid_option { |flag| Utils.print_error!("Invalid option: #{flag}") }
