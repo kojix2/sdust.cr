@@ -34,5 +34,20 @@ module Sdust
         yield name, sequence unless name.nil?
       end
     end
+
+    def normalize_sequence(sequence : IO::Memory | String)
+      sequence.to_slice.map do |c|
+        case c
+        when 65u8, 97u8  then 0u8 # A
+        when 67u8, 99u8  then 1u8 # C
+        when 71u8, 103u8 then 2u8 # G
+        when 84u8, 116u8 then 3u8 # T
+        when 78u8, 110u8 then 4u8 # N
+        else
+          STDERR.puts "[sdust] '#{c.chr}' is replaced with 'N'"
+          4u8
+        end
+      end
+    end
   end
 end

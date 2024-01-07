@@ -45,7 +45,7 @@ module Sdust
 
     def validate_arguments(argv)
       case argv.size
-      when 3
+      when 1
         # OK
       when 0
         STDERR.puts self
