@@ -33,6 +33,9 @@ jobs:
           docker exec alpine shards build --release --static
           docker exec alpine chmod +x bin/sdust
           zip -j bin/sdust-linux.zip bin/sdust
+          docker exec alpine shards build --release --static -Dpreview_mt
+          docker exec alpine chmod +x bin/sdust
+          zip -j bin/sdust-linux-multi-thread.zip bin/sdust
 
       - name: Run Mac Build x64
         if: matrix.os == 'macos'
@@ -41,6 +44,9 @@ jobs:
           shards build --release
           chmod +x bin/sdust
           zip -j bin/sdust-macos.zip bin/sdust
+          shards build --release -Dpreview_mt
+          chmod +x bin/sdust
+          zip -j bin/sdust-macos-multi-thread.zip bin/sdust
 
       - name: Run Windows Build x64
         if: matrix.os == 'windows'
@@ -49,12 +55,18 @@ jobs:
           shards build --release
           Set-ExecutionPolicy RemoteSigned -Scope Process
           Compress-Archive -Path bin/sdust.exe -DestinationPath bin/sdust-windows.zip
-          
+          shards build --release -Dpreview_mt
+          Set-ExecutionPolicy RemoteSigned -Scope Process
+          Compress-Archive -Path bin/sdust.exe -DestinationPath bin/sdust-windows-multi-thread.zip
+
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
           files: |
             bin/sdust-linux.zip
+            bin/sdust-linux-multi-thread.zip
             bin/sdust-macos.zip
+            bin/sdust-macos-multi-thread.zip
             bin/sdust-windows.zip
+            bin/sdust-windows-multi-thread.zip
             LICENSE.txt
