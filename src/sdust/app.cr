@@ -27,29 +27,25 @@ module Sdust
       {% if flag?(:preview_mt) %}
         STDERR.puts "[sdust] experimental multi-threading mode"
         channel = Channel(Tuple(String, Array(UInt64))).new
-        names = [] of String
+        results = Hash(String, Array(UInt64)?).new
 
         ReadFasta.each_contig(@in_file) do |long_name, sequence|
           name = long_name.split.first
           STDERR.puts "[sdust] #{name} #{sequence.size}bp"
-          names << name
+          results[name] = nil
           spawn do
             result = Core.new.sdust(sequence, win_size, threshold)
             channel.send({name, result})
           end
         end
-        results = {} of String => Array(UInt64)
-        while (!names.empty?)
-          name, result = channel.receive
-          if names.first == name
-            names.shift
-            print_result(name, result)
-            while results.has_key?(names.first)
-              n = names.shift
-              print_result(n, results.delete(n).not_nil!)
+        results.each_key do |name|
+          loop do
+            n, r = channel.receive
+            results[n] = r
+            unless results[name].nil?
+              print_result(name, results[name].not_nil!)
+              break
             end
-          else
-            results[name] = result
           end
         end
       {% else %}
