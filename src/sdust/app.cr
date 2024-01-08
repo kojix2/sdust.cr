@@ -30,14 +30,16 @@ module Sdust
     end
 
     def run(io = STDOUT)
+      starting_time = Time.local
+      STDERR.puts "[sdust] starting sdust with window size: #{win_size} and threshold: #{threshold} at #{starting_time}"
       {% if flag?(:preview_mt) %}
-        STDERR.puts "[sdust] experimental multi-threading mode"
+        STDERR.puts "[sdust] experimental multi-threading mode (#{ENV["CRYSTAL_WORKERS"] || 1} workers)"
         channel = Channel(Tuple(String, Array(UInt64))).new
         results = Hash(String, Array(UInt64)?).new
 
         ReadFasta.each_contig(@in_file) do |long_name, sequence|
           name = long_name.split.first
-          STDERR.puts "[sdust] #{name} #{sequence.size}bp"
+          STDERR.puts "[sdust] #{name} #{sequence.size} bp"
           results[name] = nil
           spawn do
             result = Core.new.sdust(sequence, win_size, threshold)
@@ -62,8 +64,9 @@ module Sdust
           print_result(name, result, io)
         end
       {% end %}
+      elapsed_time = (Time.local - starting_time).total_seconds
+      STDERR.puts "[sdust] finished at #{Time.local} (#{elapsed_time.round(2)}s)"
     end
-
     def print_result(name, result, io = STDOUT)
       result.each do |r|
         io.puts "#{name}\t#{r >> 32}\t#{r.unsafe_as(Int32)}"
