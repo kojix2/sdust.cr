@@ -18,12 +18,18 @@ module Sdust
       @in_file = @options.in_file.not_nil!
     end
 
+    def initialize(in_file : Path | String, win_size : Int32, threshold : Int32)
+      in_file = Path.new(in_file)
+      @options = Options.new(in_file, win_size, threshold)
+      @in_file = in_file
+    end
+
     def parse_options
       parser = Parser.new
       parser.parse
     end
 
-    def run
+    def run(io = STDOUT)
       {% if flag?(:preview_mt) %}
         STDERR.puts "[sdust] experimental multi-threading mode"
         channel = Channel(Tuple(String, Array(UInt64))).new
@@ -41,7 +47,7 @@ module Sdust
         results.each_key do |name|
           loop do
             unless results[name].nil?
-              print_result(name, results[name].not_nil!)
+              print_result(name, results[name].not_nil!, io)
               break
             end
             n, r = channel.receive
@@ -53,7 +59,7 @@ module Sdust
           name = long_name.split.first
           STDERR.puts "[sdust] #{name} #{sequence.size}bp"
           result = Core.new.sdust(sequence, win_size, threshold)
-          print_result(name, result)
+          print_result(name, result, io)
         end
       {% end %}
     end
