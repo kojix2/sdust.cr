@@ -40,12 +40,12 @@ module Sdust
         end
         results.each_key do |name|
           loop do
-            n, r = channel.receive
-            results[n] = r
             unless results[name].nil?
               print_result(name, results[name].not_nil!)
               break
             end
+            n, r = channel.receive
+            results[n] = r
           end
         end
       {% else %}
