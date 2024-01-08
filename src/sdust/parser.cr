@@ -13,8 +13,8 @@ module Sdust
       @options = Options.new
       @banner = <<-BANNER
 
-      Program: sdust.cr (Crystal implementation of sdust)
-      Version: #{Sdust::VERSION}
+      Program: sdust (Crystal implementation of sdust)
+      Version: #{Sdust::VERSION} (multi-threading: #{{{flag?(:preview_mt)}}})
       Source:  https://github.com/kojix2/sdust.cr
 
       Usage: sdust [options] <in.fa>
