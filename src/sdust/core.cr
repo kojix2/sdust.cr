@@ -15,6 +15,10 @@ module Sdust
     end
 
     def initialize
+      # Should we use StaticArray or Array?
+      # See https://forum.crystal-lang.org/t/6270
+      # @curr_value is worth using StaticArray because it is not only mutated but also cloned.
+      # On the other hand, @curr_window is not cloned, only mutated, so it is not so subtle.
       @curr_value = StaticArray(Int32, WordTotal).new(0)
       @curr_window = StaticArray(Int32, WordTotal).new(0)
     end
