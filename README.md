@@ -1,6 +1,7 @@
 # Sdust.cr
 
 [![test](https://github.com/kojix2/sdust.cr/actions/workflows/test.yml/badge.svg)](https://github.com/kojix2/sdust.cr/actions/workflows/test.yml)
+[![build](https://github.com/kojix2/sdust.cr/actions/workflows/build.yml/badge.svg)](https://github.com/kojix2/sdust.cr/actions/workflows/build.yml)
 
 Reimplementation of [Sdust](https://github.com/lh3/sdust) in [Crystal](https://crystal-lang.org/).
 - [symmetric DUST algorithm](https://pubmed.ncbi.nlm.nih.gov/16796549/)
