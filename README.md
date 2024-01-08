@@ -2,7 +2,8 @@
 
 [![test](https://github.com/kojix2/sdust.cr/actions/workflows/test.yml/badge.svg)](https://github.com/kojix2/sdust.cr/actions/workflows/test.yml)
 
-Reimplementation of [Sdust](https://github.com/lh3/sdust) in Crystal.
+Reimplementation of [Sdust](https://github.com/lh3/sdust) in [Crystal](https://crystal-lang.org/).
+- [symmetric DUST algorithm](https://pubmed.ncbi.nlm.nih.gov/16796549/)
 
 ## Installation
 
@@ -12,6 +13,7 @@ Install via [GitHub Releases](https://github.com/kojix2/sdust.cr/releases) or fr
 git clone https://github.com/kojix2/sdust.cr
 cd sdust.cr
 shards build --release
+# shards build --release -Dpreview_mt # enable multi-threading
 ```
 
 ## Usage
@@ -22,23 +24,14 @@ shards build --release
     -t, --threshold SIZE             Specify the threshold size
 ```
 
-Experimental multi-threading is available with the `-Dpreview_mt` option.
-
-```sh
-git clone https://github.com/kojix2/sdust.cr
-cd sdust.cr
-shards build --release -Dpreview_mt
-```
+Multi-threading
 
 Set the number of threads with the `CRYSTAL_WORKERS` environment variable.
+This enables parallel processing for each sequence within a FASTA file.
 
 ```sh
 CRYSTAL_WORKERS=4 sdust -w 64 -t 20 chrM.fa
 ```
-
-This enables parallel processing for each sequence within a FASTA file.
-
-## 
 
 ## License
 
@@ -49,11 +42,14 @@ MIT License
 
 ## FAQ
 
-- Q: Is this implementation faster than the original Sdust?
-- A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled. 
+Q: Is this implementation faster than the original Sdust?
 
-- Q: Does this implementation consume less memory than the original Sdust?
-- A: No, it appears to consume about 5 times more memory. Enabling multi-threading further increases the consumption.
+A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled. 
 
-- Q: Why was it created?
-- A: It was created to explore how much performance could be improved using Crystal, a language similar to Ruby.
+Q: Does this implementation consume less memory than the original Sdust?
+
+A: No, it appears to consume about 5 times more memory. Enabling multi-threading further increases the consumption.
+
+Q: Why was it created?
+
+A: It was created to explore how much performance could be improved using Crystal, a language similar to Ruby.
