@@ -9,7 +9,7 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: ["ubuntu"]
+        os: ["ubuntu", "macos", "windows"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,7 +22,11 @@ jobs:
       - name: Run specs
         run: crystal spec
       - name: Build executable
-        run: shards build --release
+        run: shards build --release -Dpreview_mt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdust-${{ matrix.os }}
+          path: bin/${{ matrix.os == 'windows' && 'sdust.exe' || 'sdust' }}
       - name: Download chrM
         run: wget https://hgdownload.cse.ucsc.edu/goldenpath/hg38/chromosomes/chrM.fa.gz
       - name: Install original sdust and compare results
@@ -33,5 +37,5 @@ jobs:
           make
           cd ..
           ./sdust-0.1/sdust -t 19 -w 63 chrM.fa.gz > original_sdust.out
-          ./bin/sdust -t 19 -w 63 chrM.fa.gz > crystal_sdust.out
+          ./bin/sdust -t 19 -w 63 -@ 2 chrM.fa.gz > crystal_sdust.out
           diff original_sdust.out crystal_sdust.out
