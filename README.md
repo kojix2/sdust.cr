@@ -4,6 +4,7 @@
 [![build](https://github.com/kojix2/sdust.cr/actions/workflows/build.yml/badge.svg)](https://github.com/kojix2/sdust.cr/actions/workflows/build.yml)
 
 Reimplementation of [Sdust](https://github.com/lh3/sdust) in [Crystal](https://crystal-lang.org/).
+
 - [symmetric DUST algorithm](https://pubmed.ncbi.nlm.nih.gov/16796549/)
 
 ## Installation
@@ -20,18 +21,10 @@ shards build --release
 ## Usage
 
 ```
-  Usage: sdust [options] <in.fa>
-    -w, --window SIZE                Specify the window size
-    -t, --threshold SIZE             Specify the threshold size
-```
-
-Multi-threading
-
-Set the number of threads with the `CRYSTAL_WORKERS` environment variable.
-This enables parallel processing for each sequence within a FASTA file.
-
-```sh
-CRYSTAL_WORKERS=4 sdust -w 64 -t 20 chrM.fa
+Usage: sdust [options] <in.fa>
+    -w, --window SIZE                Window size [64]
+    -t, --threshold SIZE             Threshold size [20]
+    -@, --threads INT                Number of threads [4]
 ```
 
 ## License
@@ -45,7 +38,7 @@ MIT License
 
 Q: Is this implementation faster than the original Sdust?
 
-A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled. 
+A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled.
 
 Q: Does this implementation consume less memory than the original Sdust?
 

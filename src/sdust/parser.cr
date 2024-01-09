@@ -25,6 +25,9 @@ module Sdust
     def setup_options
       on("-w", "--window SIZE", "Window size [#{options.win_size}]") { |v| options.win_size = v.to_i }
       on("-t", "--threshold SIZE", "Threshold size [#{options.threshold}]") { |v| options.threshold = v.to_i }
+      {% if flag?(:preview_mt) %}
+        on("-@", "--threads INT", "Number of threads [4]") { |v| set_threads(v.to_i) }
+      {% end %}
       on("-h", "--help", "Show this message") { show_help }
       on("-v", "--version", "Show version") { show_version }
       invalid_option { |flag| Utils.print_error!("Invalid option: #{flag}") }
@@ -64,5 +67,17 @@ module Sdust
     def validate_file_exists(file)
       Utils.print_error!("File not found: #{file}") unless File.exists?(file.not_nil!)
     end
+
+    {% if flag?(:preview_mt) %}
+      private def set_threads(n)
+        if n > 4
+          (n - 4).times { Crystal::Scheduler.add_worker }
+        elsif n < 4 && n > 0
+          (4 - n).times { Crystal::Scheduler.remove_worker }
+        else
+          Utils.print_error!("Invalid number of threads: #{n}")
+        end
+      end
+    {% end %}
   end
 end
