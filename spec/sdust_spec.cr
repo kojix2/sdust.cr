@@ -4,7 +4,7 @@ def run_sdust(input_file : String, t : Int32, expected_output_file : String)
   io = IO::Memory.new
   Sdust::App.new(input_file, 20, t).run(io)
   correct_result = File.read(expected_output_file)
-  io.to_s.gsub(/\r\n/, "\n").should eq correct_result
+  io.to_s.should eq correct_result
 end
 
 describe Sdust do
