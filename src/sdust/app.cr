@@ -33,7 +33,7 @@ module Sdust
       starting_time = Time.local
       STDERR.puts "[sdust] starting sdust with window size: #{win_size} and threshold: #{threshold} at #{starting_time}"
       {% if flag?(:preview_mt) %}
-        STDERR.puts "[sdust] experimental multi-threading mode (#{ENV["CRYSTAL_WORKERS"] || 1} workers)"
+        STDERR.puts "[sdust] experimental multi-threading mode (#{ENV.fetch("CRYSTAL_WORKERS", "1")} workers)"
         channel = Channel(Tuple(String, Array(UInt64))).new
         results = Hash(String, Array(UInt64)?).new
 
@@ -67,6 +67,7 @@ module Sdust
       elapsed_time = (Time.local - starting_time).total_seconds
       STDERR.puts "[sdust] finished at #{Time.local} (#{elapsed_time.round(2)}s)"
     end
+
     def print_result(name, result, io = STDOUT)
       result.each do |r|
         io.puts "#{name}\t#{r >> 32}\t#{r.unsafe_as(Int32)}"
