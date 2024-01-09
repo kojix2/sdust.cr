@@ -29,10 +29,10 @@ jobs:
           name: sdust-${{ matrix.os }}
           path: bin/${{ matrix.os == 'windows' && 'sdust.exe' || 'sdust' }}
       - name: Download chrM
-        run: wget https://hgdownload.cse.ucsc.edu/goldenpath/hg38/chromosomes/chrM.fa.gz
+        run: curl https://hgdownload.cse.ucsc.edu/goldenpath/hg38/chromosomes/chrM.fa.gz -o chrM.fa.gz
       - name: Install original sdust and compare results
         run: |
-          wget https://github.com/lh3/sdust/archive/refs/tags/v0.1.tar.gz
+          curl https://github.com/lh3/sdust/archive/refs/tags/v0.1.tar.gz -o v0.1.tar.gz
           tar -xzf v0.1.tar.gz
           cd sdust-0.1
           make
