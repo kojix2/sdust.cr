@@ -59,7 +59,7 @@ module Sdust
         STDERR.puts self
         exit 1
       else
-        Utils.print_error!("Invalid arguments") if argv.size != 1
+        Utils.print_error!("Invalid arguments")
         exit 1
       end
     end
