@@ -54,7 +54,7 @@ module Sdust
         else # N or the end of sequence; N effectively breaks input into pieces of independent sequences
           start = (cont_len - win_size + 1 > 0 ? cont_len - win_size + 1 : 0) + (i + 1 - cont_len)
           # clear up unsaved perfect intervals
-          while (!perfect_intervals.empty?)
+          while (perfect_intervals.present?)
             save_masked_regions(result, perfect_intervals, start)
             start += 1
           end
@@ -65,7 +65,7 @@ module Sdust
       end
       start = (cont_len - win_size + 1 > 0 ? cont_len - win_size + 1 : 0) + (seq_bytes.size + 1 - cont_len)
       # clear up unsaved perfect intervals
-      while (!perfect_intervals.empty?)
+      while (perfect_intervals.present?)
         save_masked_regions(result, perfect_intervals, start)
         start += 1
       end
@@ -112,7 +112,7 @@ module Sdust
       last_interval = perfect_intervals.last
       return if last_interval.start >= start
 
-      unless result.empty?
+      if result.present?
         last_result = result.last
         s = (last_result >> 32)
         f = last_result.unsafe_as(UInt32)
