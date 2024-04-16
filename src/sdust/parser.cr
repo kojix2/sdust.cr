@@ -70,10 +70,12 @@ module Sdust
 
     {% if flag?(:preview_mt) %}
       private def set_threads(n)
-        if n > 4
-          (n - 4).times { Crystal::Scheduler.add_worker }
-        elsif n < 4 && n > 0
+        case n
+        when 1..3
           (4 - n).times { Crystal::Scheduler.remove_worker }
+        when 4
+        when 5..
+          (n - 4).times { Crystal::Scheduler.add_worker }
         else
           Utils.print_error!("Invalid number of threads: #{n}")
         end
