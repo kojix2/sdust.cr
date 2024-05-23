@@ -4,6 +4,10 @@ version: 0.1.4.alpha
 authors:
   - kojix2 <2xijok@gmail.com>
 
+dependencies:
+  nworkers:
+    github: kojix2/nworkers.cr
+
 targets:
   sdust:
     main: src/cli.cr

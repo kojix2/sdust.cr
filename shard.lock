@@ -1,2 +1,6 @@
 version: 2.0
-shards: {}
+shards:
+  nworkers:
+    git: https://github.com/kojix2/nworkers.cr.git
+    version: 0.1.0+git.commit.53a55ccf4b4cf704efaaea2ba5fc94ee72fa6c12
+

@@ -1,7 +1,4 @@
-{% if flag?(:preview_mt) %}
-  require "./crystal_scheduler"
-{% end %}
-
+require "nworkers"
 require "./parser"
 require "./options"
 require "./read_fasta"
@@ -37,7 +34,7 @@ module Sdust
       starting_time = Time.local
       STDERR.puts "[sdust] starting sdust with window size: #{win_size} and threshold: #{threshold} at #{starting_time}"
       {% if flag?(:preview_mt) %}
-        STDERR.puts "[sdust] experimental multi-threading mode (#{Crystal::Scheduler.latest_worker_count} workers)"
+        STDERR.puts "[sdust] experimental multi-threading mode (#{NWorkers.size} workers)"
         channel = Channel(Tuple(String, Array(UInt64))).new
         results = Hash(String, Array(UInt64)?).new
 

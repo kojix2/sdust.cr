@@ -68,18 +68,8 @@ module Sdust
       Utils.print_error!("File not found: #{file}") unless File.exists?(file.not_nil!)
     end
 
-    {% if flag?(:preview_mt) %}
-      private def set_threads(n)
-        case n
-        when 1..3
-          (4 - n).times { Crystal::Scheduler.remove_worker }
-        when 4
-        when 5..
-          (n - 4).times { Crystal::Scheduler.add_worker }
-        else
-          Utils.print_error!("Invalid number of threads: #{n}")
-        end
-      end
-    {% end %}
+    private def set_threads(n)
+      NWorkers.set_worker(n)
+    end
   end
 end
