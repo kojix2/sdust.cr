@@ -26,7 +26,7 @@ jobs:
         run: crystal spec
       - name: Build executable
         run: shards build --release -Dpreview_mt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: sdust-${{ matrix.os }}
           path: bin/${{ matrix.os == 'windows' && 'sdust.exe' || 'sdust' }}
