@@ -1,0 +1,160 @@
+name: build
+
+on:
+  push:
+    branches: ["*"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: windows-latest
+            target: x86_64-pc-windows-gnu
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Install Crystal
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Install Crystal (MinGW64)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-crystal
+            mingw-w64-x86_64-shards
+            zip
+
+      - name: Set version variables
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION=${{ github.ref_name }}
+          else
+            VERSION="build-$(date +%Y%m%d-%H%M%S)"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "BIN=sdust" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        run: shards install --without-development
+
+      - name: Install dependencies (MinGW64)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        shell: msys2 {0}
+        run: shards install --without-development
+
+      - name: Run specs
+        if: matrix.target != 'x86_64-pc-windows-gnu'
+        run: crystal spec
+
+      - name: Run specs (MinGW64)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        shell: msys2 {0}
+        run: crystal spec
+
+      - name: Build on Linux
+        if: matrix.target == 'x86_64-unknown-linux-musl'
+        shell: bash
+        run: |
+          mkdir -p bin
+          docker run -d --name alpine -v $(pwd):/workspace -w /workspace crystallang/crystal:latest-alpine tail -f /dev/null
+          docker exec alpine shards install --without-development --release --static
+          docker exec alpine shards build --release --static
+          docker exec alpine chmod +x bin/$BIN
+          ldd bin/$BIN || echo "Static binary (no dynamic dependencies)"
+          file bin/$BIN
+          bin/$BIN --help
+          PKG=sdust-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          tar czf $PKG.tar.gz $PKG
+
+      - name: Build on macOS
+        if: startsWith(matrix.target, 'x86_64-apple-darwin') || startsWith(matrix.target, 'aarch64-apple-darwin')
+        shell: bash
+        run: |
+          shards install --without-development --release
+          shards build --release
+          chmod +x bin/$BIN
+          otool -L bin/$BIN
+          file bin/$BIN
+          bin/$BIN --help
+          PKG=sdust-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          tar czf $PKG.tar.gz $PKG
+
+      - name: Build on Windows (MSVC)
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          shards install --without-development --release
+          shards build --release
+          bin/sdust --help
+          $pkg = "sdust-$env:VERSION-${{ matrix.target }}"
+          mkdir $pkg
+          Copy-Item "bin/$env:BIN.exe" "$pkg/"
+          Copy-Item "LICENSE" "$pkg/"
+          Copy-Item "README.md" "$pkg/"
+          Compress-Archive -Path "$pkg/*" -DestinationPath "$pkg.zip"
+
+      - name: Build on Windows (MinGW64)
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        shell: msys2 {0}
+        run: |
+          shards install --without-development --release
+          shards build --release --static
+          file bin/$BIN.exe
+          bin/$BIN --help
+          PKG=sdust-${VERSION}-${{ matrix.target }}
+          mkdir -p $PKG
+          cp bin/$BIN.exe $PKG/
+          cp LICENSE $PKG/
+          cp README.md $PKG/
+          zip -r $PKG.zip $PKG
+
+      - name: Upload artifacts (non-release)
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: sdust-${{ matrix.target }}
+          path: |
+            sdust-*.tar.gz
+            sdust-*.zip
+
+      - name: Upload release assets (release only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            sdust-*.tar.gz
+            sdust-*.zip
