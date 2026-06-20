@@ -35,11 +35,11 @@ MIT License
 
 Q: Is this implementation faster than the original Sdust?
 
-A: No, it's about 1.5 times slower.
+A: No. Earlier versions were about 1.5x slower. In the v0.2.0 benchmark, after streaming FASTA records through the core and reducing some allocations, it is about 1.04x slower on chr21.
 
 Q: Does this implementation consume less memory than the original Sdust?
 
-A: No, it appears to consume about 5 times more memory.
+A: In the v0.2.0 benchmark, yes. Earlier versions used several times more memory. After reducing retained sequence and intermediate data, peak RSS on chr21 is lower than the original Sdust.
 
 Q: Why was it created?
 
