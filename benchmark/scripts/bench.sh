@@ -48,7 +48,7 @@ done
 
 # 4. allocation attribution — which code allocates the extra memory (GC.stats)
 say "allocation (GC.stats)"
-crystal build --release bench_core.cr -o "$TMP/bench_core" >/dev/null 2>&1
+(cd "$ROOT" && crystal build --release benchmark/scripts/bench_core.cr -o "$TMP/bench_core") >/dev/null 2>&1
 "$TMP/bench_core" "$FA" "$W" "$T" | tee "$TMP/alloc.txt"
 
 # 5. CPU — counters (cr vs or) + the single hottest function
@@ -57,7 +57,7 @@ perf stat -- "$CR" -w "$W" -t "$T" "$FA" >/dev/null 2>"$TMP/ps_cr.txt"
 perf stat -- "$OR" -w "$W" -t "$T" "$FA" >/dev/null 2>"$TMP/ps_or.txt"
 perf record -g -o "$TMP/perf.data" -- "$CR" -w "$W" -t "$T" "$FA" >/dev/null 2>&1
 perf report -i "$TMP/perf.data" --stdio --no-children 2>/dev/null \
-  | grep -E '^[[:space:]]+[0-9].*sdust-cr' | head -1 > "$TMP/top.txt" || true
+  | awk '/^[[:space:]]+[0-9].*sdust-cr/ { print; exit }' > "$TMP/top.txt" || true
 
 # --- write the one-page summary ---
 TMP="$TMP" TAG="$TAG" CHROM="$CHROM" W="$W" T="$T" MD5="$MD5" LINES="$LINES" \
