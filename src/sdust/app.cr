@@ -1,4 +1,3 @@
-require "nworkers"
 require "./parser"
 require "./options"
 require "./read_fasta"
@@ -33,38 +32,12 @@ module Sdust
     def run(io = STDOUT)
       starting_time = Time.local
       STDERR.puts "[sdust] starting sdust with window size: #{win_size} and threshold: #{threshold} at #{starting_time}"
-      {% if flag?(:preview_mt) %}
-        STDERR.puts "[sdust] experimental multi-threading mode (#{NWorkers.size} workers)"
-        channel = Channel(Tuple(String, Array(UInt64))).new
-        results = Hash(String, Array(UInt64)?).new
-
-        ReadFasta.each_contig(@in_file) do |long_name, sequence|
-          name = long_name.split.first
-          STDERR.puts "[sdust] #{name} #{sequence.size} bp"
-          results[name] = nil
-          spawn do
-            result = Core.new.sdust(sequence, win_size, threshold)
-            channel.send({name, result})
-          end
-        end
-        results.each_key do |name|
-          loop do
-            unless results[name].nil?
-              print_result(name, results[name].not_nil!, io)
-              break
-            end
-            n, r = channel.receive
-            results[n] = r
-          end
-        end
-      {% else %}
-        ReadFasta.each_contig(@in_file) do |long_name, sequence|
-          name = long_name.split.first
-          STDERR.puts "[sdust] #{name} #{sequence.size}bp"
-          result = Core.new.sdust(sequence, win_size, threshold)
-          print_result(name, result, io)
-        end
-      {% end %}
+      ReadFasta.each_contig(@in_file) do |long_name, sequence|
+        name = long_name.split.first
+        STDERR.puts "[sdust] #{name} #{sequence.size}bp"
+        result = Core.new.sdust(sequence, win_size, threshold)
+        print_result(name, result, io)
+      end
       elapsed_time = (Time.local - starting_time).total_seconds
       STDERR.puts "[sdust] finished at #{Time.local} (#{elapsed_time.round(2)}s)"
     end

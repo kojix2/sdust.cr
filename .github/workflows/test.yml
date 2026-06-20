@@ -25,7 +25,7 @@ jobs:
       - name: Run specs
         run: crystal spec
       - name: Build executable
-        run: shards build --release -Dpreview_mt
+        run: shards build --release
       - uses: actions/upload-artifact@v7
         with:
           name: sdust-${{ matrix.os }}
@@ -40,5 +40,5 @@ jobs:
           make
           cd ..
           ./sdust-0.1/sdust -t 19 -w 63 chrM.fa.gz > original_sdust.out
-          ./bin/sdust -t 19 -w 63 -@ 2 chrM.fa.gz > crystal_sdust.out
+          ./bin/sdust -t 19 -w 63 chrM.fa.gz > crystal_sdust.out
           diff original_sdust.out crystal_sdust.out

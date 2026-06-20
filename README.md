@@ -14,7 +14,6 @@ Install via [GitHub Releases](https://github.com/kojix2/sdust.cr/releases) or fr
 git clone https://github.com/kojix2/sdust.cr
 cd sdust.cr
 shards build --release
-# shards build --release -Dpreview_mt # enable multi-threading
 ```
 
 ## Usage
@@ -23,7 +22,6 @@ shards build --release
 Usage: sdust [options] <in.fa>
     -w, --window SIZE                Window size [64]
     -t, --threshold SIZE             Threshold size [20]
-    -@, --threads INT                Number of threads [4]
 ```
 
 ## License
@@ -37,11 +35,11 @@ MIT License
 
 Q: Is this implementation faster than the original Sdust?
 
-A: No, it's about 1.5 times slower. However, it becomes quite fast when multi-threading is enabled.
+A: No, it's about 1.5 times slower.
 
 Q: Does this implementation consume less memory than the original Sdust?
 
-A: No, it appears to consume about 5 times more memory. Enabling multi-threading further increases the consumption.
+A: No, it appears to consume about 5 times more memory.
 
 Q: Why was it created?
 
