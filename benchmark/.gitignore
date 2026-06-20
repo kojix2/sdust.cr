@@ -1,0 +1,3 @@
+# Keep only the per-version summary markdowns under results/.
+results/*
+!results/*.md
