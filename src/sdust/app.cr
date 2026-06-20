@@ -56,7 +56,7 @@ module Sdust
 
     def print_result(name, result, io = STDOUT)
       result.each do |region|
-        io << name << '\t' << (region >> 32) << '\t' << region.unsafe_as(Int32) << '\n'
+        io << name << '\t' << region.start << '\t' << region.finish << '\n'
       end
     end
   end

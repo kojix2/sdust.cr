@@ -1,8 +1,16 @@
 module Sdust
   class Core
-    WordLength = 3
-    WordTotal  = 1 << (3 << 1)
+    WordLength =  3
+    WordTotal  = 64 # 4 ** WordLength
     WordMask   = WordTotal - 1
+
+    struct MaskedRegion
+      getter start : Int32
+      getter finish : Int32
+
+      def initialize(@start, @finish)
+      end
+    end
 
     struct PerfectInterval
       getter start : Int32
@@ -32,7 +40,7 @@ module Sdust
       @curr_word = 0
       @pos = 0
       @perfect_intervals = [] of PerfectInterval
-      @result = [] of UInt64
+      @result = [] of MaskedRegion
       @window = [] of Int32
     end
 
@@ -71,10 +79,10 @@ module Sdust
         b = ReadFasta.normalize_base(byte)
         if b < 4 # an A/C/G/T base
           @cont_len += 1
-          @curr_word = (@curr_word << 2 | b) & (WordTotal - 1)
+          @curr_word = (@curr_word << 2 | b) & WordMask
           if @cont_len >= WordLength # we have seen a word
             # set the start of the current window
-            @start = (@cont_len - @win_size > 0 ? @cont_len - @win_size : 0) + (i + 1 - @cont_len)
+            @start = Math.max(@cont_len - @win_size, 0) + (i + 1 - @cont_len)
             # save intervals falling out of the current window?
             save_masked_regions(@result, @perfect_intervals, @start)
             @win_len, @repeat_window, @repeat_value = \
@@ -84,7 +92,7 @@ module Sdust
             end
           end
         else # N or the end of sequence; N effectively breaks input into pieces of independent sequences
-          @start = (@cont_len - @win_size + 1 > 0 ? @cont_len - @win_size + 1 : 0) + (i + 1 - @cont_len)
+          @start = Math.max(@cont_len - @win_size + 1, 0) + (i + 1 - @cont_len)
           # clear up unsaved perfect intervals
           while @perfect_intervals.present?
             save_masked_regions(@result, @perfect_intervals, @start)
@@ -99,7 +107,7 @@ module Sdust
     end
 
     def finish
-      @start = (@cont_len - @win_size + 1 > 0 ? @cont_len - @win_size + 1 : 0) + (@pos + 1 - @cont_len)
+      @start = Math.max(@cont_len - @win_size + 1, 0) + (@pos + 1 - @cont_len)
       # clear up unsaved perfect intervals
       while @perfect_intervals.present?
         save_masked_regions(@result, @perfect_intervals, @start)
@@ -126,7 +134,7 @@ module Sdust
       repeat_window += (@curr_window[curr_word] += 1) - 1
       repeat_value += (@curr_value[curr_word] += 1) - 1
 
-      if @curr_value[curr_word] * 10 > (threshold << 1)
+      if @curr_value[curr_word] * 10 > threshold * 2
         loop do
           s = window[window.size - win_len]
           repeat_value -= (@curr_value[s] -= 1)
@@ -139,7 +147,7 @@ module Sdust
     end
 
     def save_masked_regions(
-      result : Array(UInt64),
+      result : Array(MaskedRegion),
       perfect_intervals : Array(PerfectInterval),
       start : Int32,
     )
@@ -150,15 +158,13 @@ module Sdust
 
       if result.present?
         last_result = result.last
-        s = (last_result >> 32)
-        f = last_result.unsafe_as(UInt32)
-        if last_interval.start <= f
+        if last_interval.start <= last_result.finish
           saved = true
-          result[-1] = (s.to_u64 << 32) | (f > last_interval.finish ? f : last_interval.finish)
+          result[-1] = MaskedRegion.new(last_result.start, Math.max(last_result.finish, last_interval.finish))
         end
       end
       unless saved
-        result << ((last_interval.start.to_u64 << 32) | last_interval.finish)
+        result << MaskedRegion.new(last_interval.start, last_interval.finish)
       end
       while perfect_intervals.present? && perfect_intervals.last.start < start
         perfect_intervals.pop
