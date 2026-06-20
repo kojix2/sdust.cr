@@ -8,4 +8,8 @@ targets:
   sdust:
     main: src/cli.cr
 
+dependencies:
+  fastx:
+    github: bio-cr/fastx.cr
+
 license: MIT
