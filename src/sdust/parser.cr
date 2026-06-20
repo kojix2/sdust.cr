@@ -13,12 +13,12 @@ module Sdust
       @options = Options.new
       @banner = <<-BANNER
 
-      Program: sdust (Crystal implementation of sdust)
-      Version: #{Sdust::VERSION}
-      Source:  https://github.com/kojix2/sdust.cr
+        Program: sdust (Crystal implementation of sdust)
+        Version: #{Sdust::VERSION}
+        Source:  https://github.com/kojix2/sdust.cr
 
-      Usage: sdust [options] <in.fa>
-      BANNER
+        Usage: sdust [options] <in.fa>
+        BANNER
       setup_options
     end
 
@@ -43,8 +43,9 @@ module Sdust
     def parse(argv = ARGV) : Options
       super
       validate_arguments(argv)
-      options.in_file = Path.new(argv.first)
-      validate_file_exists(options.in_file)
+      in_file = Path.new(argv.first)
+      options.in_file = in_file
+      validate_file_exists(in_file)
       options
     end
 
@@ -61,8 +62,8 @@ module Sdust
       end
     end
 
-    def validate_file_exists(file)
-      Utils.print_error!("File not found: #{file}") unless File.exists?(file.not_nil!)
+    def validate_file_exists(file : Path)
+      Utils.print_error!("File not found: #{file}") unless File.exists?(file)
     end
   end
 end

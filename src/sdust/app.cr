@@ -14,8 +14,9 @@ module Sdust
     end
 
     def initialize
-      @options = parse_options
-      @in_file = @options.in_file.not_nil!
+      options = parse_options
+      @options = options
+      @in_file = options.in_file || raise "missing input file"
     end
 
     def initialize(in_file : Path | String, win_size : Int32, threshold : Int32)
@@ -43,8 +44,8 @@ module Sdust
     end
 
     def print_result(name, result, io = STDOUT)
-      result.each do |r|
-        io.puts "#{name}\t#{r >> 32}\t#{r.unsafe_as(Int32)}"
+      result.each do |region|
+        io.puts "#{name}\t#{region >> 32}\t#{region.unsafe_as(Int32)}"
       end
     end
   end
