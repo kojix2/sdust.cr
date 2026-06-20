@@ -23,6 +23,7 @@ module Sdust
     end
 
     def setup_options
+      self.summary_width = 24
       on("-w", "--window SIZE", "Window size [#{options.win_size}]") { |v| options.win_size = v.to_i }
       on("-t", "--threshold SIZE", "Threshold size [#{options.threshold}]") { |v| options.threshold = v.to_i }
       on("-h", "--help", "Show this message") { show_help }
