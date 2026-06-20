@@ -16,13 +16,26 @@ cd sdust.cr
 shards build --release
 ```
 
+To enable parallel processing with `--threads`, build with Crystal's execution
+context preview flags:
+
+```console
+shards build --release -Dpreview_mt -Dexecution_context
+```
+
 ## Usage
 
 ```
 Usage: sdust [options] <in.fa>
     -w, --window SIZE                Window size [64]
     -t, --threshold SIZE             Threshold size [20]
+    -@, --threads COUNT              Worker threads [1]
 ```
+
+By default, sdust streams FASTA records and does not keep whole contigs in
+memory. With `--threads` greater than 1, records are processed in parallel by
+contig. This can use much more memory because each worker buffers a whole
+contig before processing it. Use `--threads 0` to use all available workers.
 
 ## License
 
