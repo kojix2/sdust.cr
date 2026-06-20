@@ -33,19 +33,30 @@ module Sdust
     def run(io = STDOUT)
       starting_time = Time.local
       STDERR.puts "[sdust] starting sdust with window size: #{win_size} and threshold: #{threshold} at #{starting_time}"
-      ReadFasta.each_contig(@in_file) do |long_name, sequence|
-        name = long_name.split.first
-        STDERR.puts "[sdust] #{name} #{sequence.size}bp"
-        result = Core.new.sdust(sequence, win_size, threshold)
-        print_result(name, result, io)
+
+      Fastx::Fasta::Reader.open(@in_file) do |reader|
+        reader.each_record_lines do |header, lines|
+          name = header.split.first
+          length = 0
+          core = Core.new.start(win_size, threshold)
+
+          lines.each do |line|
+            length += line.size
+            core.feed(line)
+          end
+
+          STDERR.puts "[sdust] #{name} #{length}bp"
+          print_result(name, core.finish, io)
+        end
       end
+
       elapsed_time = (Time.local - starting_time).total_seconds
       STDERR.puts "[sdust] finished at #{Time.local} (#{elapsed_time.round(2)}s)"
     end
 
     def print_result(name, result, io = STDOUT)
       result.each do |region|
-        io.puts "#{name}\t#{region >> 32}\t#{region.unsafe_as(Int32)}"
+        io << name << '\t' << (region >> 32) << '\t' << region.unsafe_as(Int32) << '\n'
       end
     end
   end

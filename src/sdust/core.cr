@@ -21,55 +21,91 @@ module Sdust
       # On the other hand, @curr_window is not cloned, only mutated, so it is not so subtle.
       @curr_value = StaticArray(Int32, WordTotal).new(0)
       @curr_window = StaticArray(Int32, WordTotal).new(0)
+
+      @win_size = 0
+      @threshold = 0
+      @repeat_value = 0
+      @repeat_window = 0
+      @win_len = 0
+      @start = 0
+      @cont_len = 0
+      @curr_word = 0
+      @pos = 0
+      @perfect_intervals = [] of PerfectInterval
+      @result = [] of UInt64
+      @window = [] of Int32
     end
 
-    def sdust(sequence : String | IO::Memory, win_size : Int32, threshold : Int32)
-      repeat_value = 0
-      repeat_window = 0
-      win_len = 0
-      start = 0    # start of the current window
-      cont_len = 0 # length of a contiguous A/C/G/T (sub)sequence
-      curr_word = 0
+    def sdust(sequence : String | IO::Memory | Bytes, win_size : Int32, threshold : Int32)
+      start(win_size, threshold)
+      feed(sequence.to_slice)
+      finish
+    end
 
-      perfect_intervals = [] of PerfectInterval
-      result = [] of UInt64
-      window = [] of Int32
+    def start(win_size : Int32, threshold : Int32)
+      @win_size = win_size
+      @threshold = threshold
+      @repeat_value = 0
+      @repeat_window = 0
+      @win_len = 0
+      @start = 0
+      @cont_len = 0
+      @curr_word = 0
+      @pos = 0
+      @perfect_intervals.clear
+      @result.clear
+      @window.clear
 
-      seq_bytes = ReadFasta.normalize_sequence(sequence)
-      seq_bytes.each_with_index do |b, i|
+      WordTotal.times do |i|
+        @curr_value[i] = 0
+        @curr_window[i] = 0
+      end
+
+      self
+    end
+
+    def feed(seq_bytes : Bytes)
+      seq_bytes.each do |byte|
+        i = @pos
+        @pos += 1
+        b = ReadFasta.normalize_base(byte)
         if b < 4 # an A/C/G/T base
-          cont_len += 1
-          curr_word = (curr_word << 2 | b) & (WordTotal - 1)
-          if cont_len >= WordLength # we have seen a word
+          @cont_len += 1
+          @curr_word = (@curr_word << 2 | b) & (WordTotal - 1)
+          if @cont_len >= WordLength # we have seen a word
             # set the start of the current window
-            start = (cont_len - win_size > 0 ? cont_len - win_size : 0) + (i + 1 - cont_len)
+            @start = (@cont_len - @win_size > 0 ? @cont_len - @win_size : 0) + (i + 1 - @cont_len)
             # save intervals falling out of the current window?
-            save_masked_regions(result, perfect_intervals, start)
-            win_len, repeat_window, repeat_value = \
-               shift_window(curr_word, window, threshold, win_size, win_len, repeat_window, repeat_value)
-            if repeat_window * 10 > win_len * threshold
-              find_perfect(perfect_intervals, window, threshold, start, win_len, repeat_value)
+            save_masked_regions(@result, @perfect_intervals, @start)
+            @win_len, @repeat_window, @repeat_value = \
+               shift_window(@curr_word, @window, @threshold, @win_size, @win_len, @repeat_window, @repeat_value)
+            if @repeat_window * 10 > @win_len * @threshold
+              find_perfect(@perfect_intervals, @window, @threshold, @start, @win_len, @repeat_value)
             end
           end
         else # N or the end of sequence; N effectively breaks input into pieces of independent sequences
-          start = (cont_len - win_size + 1 > 0 ? cont_len - win_size + 1 : 0) + (i + 1 - cont_len)
+          @start = (@cont_len - @win_size + 1 > 0 ? @cont_len - @win_size + 1 : 0) + (i + 1 - @cont_len)
           # clear up unsaved perfect intervals
-          while perfect_intervals.present?
-            save_masked_regions(result, perfect_intervals, start)
-            start += 1
+          while @perfect_intervals.present?
+            save_masked_regions(@result, @perfect_intervals, @start)
+            @start += 1
           end
-          perfect_intervals.clear
-          cont_len = 0
-          curr_word = 0
+          @perfect_intervals.clear
+          @cont_len = 0
+          @curr_word = 0
         end
       end
-      start = (cont_len - win_size + 1 > 0 ? cont_len - win_size + 1 : 0) + (seq_bytes.size + 1 - cont_len)
+      self
+    end
+
+    def finish
+      @start = (@cont_len - @win_size + 1 > 0 ? @cont_len - @win_size + 1 : 0) + (@pos + 1 - @cont_len)
       # clear up unsaved perfect intervals
-      while perfect_intervals.present?
-        save_masked_regions(result, perfect_intervals, start)
-        start += 1
+      while @perfect_intervals.present?
+        save_masked_regions(@result, @perfect_intervals, @start)
+        @start += 1
       end
-      result
+      @result
     end
 
     def shift_window(
@@ -124,7 +160,9 @@ module Sdust
       unless saved
         result << ((last_interval.start.to_u64 << 32) | last_interval.finish)
       end
-      perfect_intervals.select! { |i| i.start >= start }
+      while perfect_intervals.present? && perfect_intervals.last.start < start
+        perfect_intervals.pop
+      end
     end
 
     def find_perfect(
